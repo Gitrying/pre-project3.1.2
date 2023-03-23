@@ -2,10 +2,19 @@ package web.pp311.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import web.pp311.model.User;
 import web.pp311.service.UserService;
+
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Controller
@@ -32,7 +41,10 @@ public class UsersController {
 
     //Add user method Post
     @PostMapping()
-    public String createUser(@ModelAttribute("user") User user) {
+    public String createUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()){
+            return "add";
+        }
         userService.add(user);
         return "redirect:/";
     }
@@ -40,8 +52,16 @@ public class UsersController {
     //User show method
     @GetMapping("/{id}")
     public String userById(@PathVariable("id") int id, Model model) {
-        model.addAttribute("user", userService.getById(id));
-        return "info";
+        if (userService.getById(id)!=null){
+            model.addAttribute("user", userService.getById(id));
+            return "info";
+        }else{
+            List<String> messages = new ArrayList<>();
+            messages.add("Ошибка");
+            messages.add("Такого пользователя не существует (*μ_μ)");
+            model.addAttribute("messages", messages);
+            return "unknown_user";
+        }
     }
 
 
@@ -54,7 +74,10 @@ public class UsersController {
 
 
     @PatchMapping("/{id}")
-    public String update(@ModelAttribute("user") User user, @PathVariable("id") int id){
+    public String update(@ModelAttribute("user")@Valid User user,BindingResult bindingResult, @PathVariable("id") int id){
+        if (bindingResult.hasErrors()){
+            return "edit";
+        }
         userService.edit(user, id);
         return "redirect:/";
 
